@@ -1,6 +1,4 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 def generate_launch_description():
@@ -12,8 +10,8 @@ def generate_launch_description():
             output='screen',
             parameters=[{
                 'frame_id': 'camera_link_optical',
-                'width': 640,
-                'height': 480,                
+                'width': 1280,
+                'height': 720,                
             }]
         )
     ])
