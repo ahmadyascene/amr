@@ -10,8 +10,6 @@ def generate_launch_description():
             output='screen',
             parameters=[{
                 'frame_id': 'camera_link_optical',
-                'width': 1280,
-                'height': 720,                
             }]
         )
     ])
