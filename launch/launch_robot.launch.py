@@ -4,10 +4,11 @@ from ament_index_python.packages import get_package_share_directory
 
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, TimerAction, RegisterEventHandler
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, TimerAction, RegisterEventHandler
 from launch.event_handlers import OnProcessStart
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command
+from launch.substitutions import LaunchConfiguration
+
 
 from launch_ros.actions import Node
 
@@ -28,15 +29,12 @@ def generate_launch_description():
     )
     
 
-    robot_description = Command(['ros2 param get --hide-type /robot_state_publisher robot_description'])
-
     controller_params_file = os.path.join(get_package_share_directory(package_name),'config','my_controllers.yaml')
 
     controller_manager = Node(
         package='controller_manager',
         executable='ros2_control_node',
-        parameters=[{'robot_description': robot_description},
-                    controller_params_file],
+        parameters=[controller_params_file],
     )
 
     delayed_controller_manager = TimerAction(period=3.0,actions=[controller_manager])
@@ -72,6 +70,17 @@ def generate_launch_description():
         )
     )
 
+    twist_mux_config = os.path.join(get_package_share_directory(package_name),
+        'config', 'twist_mux.yaml')
+    twist_mux = Node(
+        package='twist_mux',
+        executable='twist_mux',
+        output='screen',
+        remappings={('/cmd_vel_out', '/cmd_vel')},
+        parameters=[
+            {'use_sim_time': False},
+            twist_mux_config])
+
 
     # Launch them all!
     return LaunchDescription([
@@ -79,4 +88,5 @@ def generate_launch_description():
         delayed_controller_manager,
         delayed_diff_drive_spawner,
         delayed_joint_broad_spawner,
+        twist_mux,
     ])
