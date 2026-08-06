@@ -36,12 +36,12 @@ amcl:
     z_max: 0.05
     z_rand: 0.5
     z_short: 0.05
-    scan_topic: /scan
+    scan_topic: scan
 
 bt_navigator:
   ros__parameters:
     global_frame: map
-    robot_base_frame: base_footprint
+    robot_base_frame: base_link
     odom_topic: /odom
     bt_loop_duration: 10
     default_server_timeout: 20
@@ -61,16 +61,9 @@ bt_navigator:
     # Built-in plugins are added automatically
     # plugin_lib_names: []
 
-    error_code_name_prefixes:
-      - compute_path
-      - follow_path
-      - nav_to_pose
-      - nav_thru_poses
-      - spin
-      - backup
-      - drive_on_heading
-      - wait
-      - assisted_teleop
+    error_code_names:
+      - compute_path_error_code
+      - follow_path_error_code
 
 controller_server:
   ros__parameters:
@@ -78,7 +71,7 @@ controller_server:
     controller_frequency: 20.0
     costmap_update_timeout: 0.30
     min_x_velocity_threshold: 0.001
-    min_y_velocity_threshold: 0.0
+    min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
     failure_tolerance: 0.3
     progress_checker_plugins: ["progress_checker"]
@@ -100,25 +93,25 @@ controller_server:
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.25
-      yaw_goal_tolerance: 0.25
+      xy_goal_tolerance: 0.35
+      yaw_goal_tolerance: 0.35
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
       time_steps: 56
       model_dt: 0.05
       batch_size: 2000
-      ax_max: 1.2
-      ax_min: -1.2
+      ax_max: 3.0
+      ax_min: -3.0
       ay_max: 0.0
       ay_min: 0.0
-      az_max: 2.5
-      vx_std: 0.35
+      az_max: 3.5
+      vx_std: 0.2
       vy_std: 0.0
       wz_std: 0.4
-      vx_max: 0.35
-      vx_min: -0.28
+      vx_max: 0.38
+      vx_min: -0.35
       vy_max: 0.0
-      wz_max: 2.2
+      wz_max: 2.1
       iteration_count: 1
       prune_distance: 1.7
       transform_tolerance: 0.1
@@ -135,11 +128,7 @@ controller_server:
       critics: [
         "ConstraintCritic", "CostCritic", "GoalCritic",
         "GoalAngleCritic", "PathAlignCritic", "PathFollowCritic",
-        "PathAngleCritic", "PreferForwardCritic", "TwirlingCritic"] # Added TwirlingCritic
-      TwirlingCritic:
-        enabled: true
-        twirling_cost_power: 1
-        twirling_cost_weight: 10.0
+        "PathAngleCritic", "PreferForwardCritic"]
       ConstraintCritic:
         enabled: true
         cost_power: 1
@@ -162,7 +151,7 @@ controller_server:
       CostCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 1.5
+        cost_weight: 3.81
         near_collision_cost: 253
         critical_cost: 300.0
         consider_footprint: false
@@ -203,7 +192,7 @@ local_costmap:
       update_frequency: 5.0
       publish_frequency: 2.0
       global_frame: odom
-      robot_base_frame: base_footprint
+      robot_base_frame: base_link
       rolling_window: true
       width: 3
       height: 3
@@ -213,7 +202,7 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 5.0
-        inflation_radius: 0.5
+        inflation_radius: 0.55
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
@@ -245,7 +234,7 @@ global_costmap:
       update_frequency: 1.0
       publish_frequency: 1.0
       global_frame: map
-      robot_base_frame: base_footprint
+      robot_base_frame: base_link
       robot_radius: 0.17
       resolution: 0.05
       track_unknown_space: true
@@ -270,7 +259,7 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 5.0
-        inflation_radius: 0.5
+        inflation_radius: 0.55
       always_send_full_costmap: True
 
 # The yaml_filename does not need to be specified since it going to be set by defaults in launch.
@@ -328,12 +317,12 @@ behavior_server:
       plugin: "nav2_behaviors::AssistedTeleop"
     local_frame: odom
     global_frame: map
-    robot_base_frame: base_footprint
+    robot_base_frame: base_link
     transform_tolerance: 0.1
     simulate_ahead_time: 2.0
     max_rotational_vel: 1.0
     min_rotational_vel: 0.4
-    rotational_acc_lim: 1.8
+    rotational_acc_lim: 3.2
 
 waypoint_follower:
   ros__parameters:
@@ -376,10 +365,10 @@ velocity_smoother:
     stamp_smoothed_velocity_with_smoothing_time: False
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [0.35, 0.0, 2.2]
-    min_velocity: [-0.28, 0.0, -2.2]
-    max_accel: [1.2, 0.0, 2.5]
-    max_decel: [-1.2, 0.0, -2.5]
+    max_velocity: [0.38, 0.0, 2.1]
+    min_velocity: [-0.35, 0.0, -2.1]
+    max_accel: [2.5, 0.0, 3.2]
+    max_decel: [-2.5, 0.0, -3.2]
     odom_topic: "odom"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
@@ -411,7 +400,7 @@ collision_monitor:
     observation_sources: ["scan"]
     scan:
       type: "scan"
-      topic: "/scan"
+      topic: "scan"
       min_height: 0.15
       max_height: 2.0
       enabled: True
@@ -425,7 +414,7 @@ docking_server:
     undock_linear_tolerance: 0.05
     undock_angular_tolerance: 0.1
     max_retries: 3
-    base_frame: "base_footprint"
+    base_frame: "base_link"
     fixed_frame: "odom"
     dock_backwards: false
     dock_prestaging_tolerance: 0.5
